@@ -1,12 +1,12 @@
 //! Display commands.
 
-// Shamefully taken from https://github.com/EdgewaterDevelopment/rust-ssd1306
+// Shamefully taken from https://github.com/EdgewaterDevelopment/rust-sh1106
 
 #[cfg(feature = "async")]
 use display_interface::AsyncWriteOnlyDataCommand;
 use display_interface::{DataFormat::U8, DisplayError, WriteOnlyDataCommand};
 
-/// SSD1306 Commands
+/// SH1106 Commands
 #[maybe_async_cfg::maybe(sync(keep_self), async(feature = "async"))]
 #[derive(Debug, Copy, Clone)]
 pub enum Command {
@@ -86,7 +86,7 @@ pub enum Command {
     Noop,
     /// Enable charge pump
     ChargePump(bool),
-    /// Select external or internal I REF. Only for 72 x 40 display with SSD1306B driver
+    /// Select external or internal I REF. Only for 72 x 40 display with SH1106B driver
     InternalIref(bool, bool),
 }
 
@@ -98,7 +98,7 @@ pub enum Command {
     )
 )]
 impl Command {
-    /// Send command to SSD1306
+    /// Send command to SH1106
     pub async fn send<DI>(self, iface: &mut DI) -> Result<(), DisplayError>
     where
         DI: WriteOnlyDataCommand,

@@ -33,7 +33,7 @@ use embedded_graphics::{
     prelude::*,
 };
 use panic_probe as _;
-use ssd1306::{prelude::*, I2CDisplayInterface, Ssd1306};
+use sh1106::{prelude::*, I2CDisplayInterface, Sh1106};
 
 #[entry]
 fn main() -> ! {
@@ -47,7 +47,7 @@ fn main() -> ! {
     );
 
     let interface = I2CDisplayInterface::new(i2c);
-    let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate90)
+    let mut display = Sh1106::new(interface, DisplaySize128x64, DisplayRotation::Rotate90)
         .into_buffered_graphics_mode();
     display.init().unwrap();
 

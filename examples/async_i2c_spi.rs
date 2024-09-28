@@ -1,4 +1,4 @@
-//! Draw a 1 bit per pixel black and white rust logo to 128x64 SSD1306 displays over both I2C
+//! Draw a 1 bit per pixel black and white rust logo to 128x64 SH1106 displays over both I2C
 //! and SPI. This uses async an approach to transfer to i2c and spi simultaniously using DMA
 //!
 //! This example is for the STM32F103 "Blue Pill" board using I2C1 and SPI1.
@@ -37,7 +37,7 @@ use embedded_graphics::{
     prelude::*,
 };
 use panic_probe as _;
-use ssd1306::{prelude::*, I2CDisplayInterface, Ssd1306Async};
+use sh1106::{prelude::*, I2CDisplayInterface, Sh1106Async};
 
 bind_interrupts!(struct Irqs {
     I2C1_EV => i2c::EventInterruptHandler<peripherals::I2C1>;
@@ -77,7 +77,7 @@ async fn main(_spawner: Spawner) {
     );
 
     let interface = I2CDisplayInterface::new(i2c);
-    let mut display_i2c = Ssd1306Async::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
+    let mut display_i2c = Sh1106Async::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_buffered_graphics_mode();
 
     // SPI
@@ -89,7 +89,7 @@ async fn main(_spawner: Spawner) {
     let spi = embedded_hal_bus::spi::ExclusiveDevice::new_no_delay(spi, cs).unwrap();
 
     let interface = SPIInterface::new(spi, dc);
-    let mut display_spi = Ssd1306Async::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
+    let mut display_spi = Sh1106Async::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_buffered_graphics_mode();
 
     // Init and reset both displays as needed

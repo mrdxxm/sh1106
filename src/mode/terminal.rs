@@ -1,8 +1,8 @@
 #[cfg(feature = "async")]
 use crate::mode::DisplayConfigAsync;
-use crate::{command::AddrMode, mode::DisplayConfig, rotation::DisplayRotation, size::*, Ssd1306};
+use crate::{command::AddrMode, mode::DisplayConfig, rotation::DisplayRotation, size::*, Sh1106};
 #[cfg(feature = "async")]
-use crate::{size::DisplaySizeAsync, Ssd1306Async};
+use crate::{size::DisplaySizeAsync, Sh1106Async};
 use core::{cmp::min, fmt};
 #[cfg(feature = "async")]
 use display_interface::AsyncWriteOnlyDataCommand;
@@ -208,7 +208,7 @@ impl TerminalMode {
         )
     )
 )]
-impl<DI, SIZE> DisplayConfig for Ssd1306<DI, SIZE, TerminalMode>
+impl<DI, SIZE> DisplayConfig for Sh1106<DI, SIZE, TerminalMode>
 where
     DI: WriteOnlyDataCommand,
     SIZE: TerminalDisplaySize,
@@ -246,7 +246,7 @@ where
         )
     )
 )]
-impl<DI, SIZE> Ssd1306<DI, SIZE, TerminalMode>
+impl<DI, SIZE> Sh1106<DI, SIZE, TerminalMode>
 where
     DI: WriteOnlyDataCommand,
     SIZE: TerminalDisplaySize,
@@ -604,7 +604,7 @@ where
 }
 
 #[cfg(feature = "async")]
-impl<DI, SIZE> Ssd1306Async<DI, SIZE, TerminalModeAsync>
+impl<DI, SIZE> Sh1106Async<DI, SIZE, TerminalModeAsync>
 where
     DI: AsyncWriteOnlyDataCommand,
     SIZE: TerminalDisplaySizeAsync,
@@ -618,7 +618,7 @@ where
     }
 }
 
-impl<DI, SIZE> fmt::Write for Ssd1306<DI, SIZE, TerminalMode>
+impl<DI, SIZE> fmt::Write for Sh1106<DI, SIZE, TerminalMode>
 where
     DI: WriteOnlyDataCommand,
     SIZE: TerminalDisplaySize,

@@ -1,14 +1,14 @@
 [package]
 authors = ["James Waples <jamwaffles@gmail.com>"]
 categories = ["embedded", "no-std"]
-description = "I2C/SPI driver for the SSD1306 OLED display controller"
-documentation = "https://docs.rs/ssd1306"
-keywords = ["no-std", "ssd1306", "oled", "embedded", "embedded-hal-driver"]
+description = "I2C/SPI driver for the SH1106 OLED display controller"
+# documentation = "https://docs.rs/ssd1306"
+# keywords = ["no-std", "sh1106", "oled", "embedded", "embedded-hal-driver"]
 license = "MIT OR Apache-2.0"
-name = "ssd1306"
+name = "sh1106"
 readme = "README.md"
-repository = "https://github.com/rust-embedded-community/ssd1306"
-version = "0.9.0"
+# repository = "https://github.com/rust-embedded-community/ssd1306"
+version = "0.1.0"
 edition = "2021"
 exclude = [ "build.rs", "build.sh", "memory.x", "doc", "*.jpg", "*.png", "*.bmp" ]
 rust-version = "1.75.0"

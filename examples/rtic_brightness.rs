@@ -31,10 +31,10 @@ mod app {
         primitives::{PrimitiveStyle, Rectangle},
     };
     use panic_probe as _;
-    use ssd1306::{mode::BufferedGraphicsMode, prelude::*, Ssd1306};
+    use sh1106::{mode::BufferedGraphicsMode, prelude::*, Sh1106};
     use tinybmp::Bmp;
 
-    type Display = Ssd1306<
+    type Display = Sh1106<
         SPIInterface<
             embedded_hal_bus::spi::ExclusiveDevice<
                 Spi<'static, Blocking>,
@@ -87,7 +87,7 @@ mod app {
         let spi = embedded_hal_bus::spi::ExclusiveDevice::new_no_delay(spi, cs).unwrap();
 
         let interface = display_interface_spi::SPIInterface::new(spi, dc);
-        let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate180)
+        let mut display = Sh1106::new(interface, DisplaySize128x64, DisplayRotation::Rotate180)
             .into_buffered_graphics_mode();
 
         display

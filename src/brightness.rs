@@ -35,10 +35,10 @@ impl Brightness {
     /// be must be between 1 and 15.
     /// The effects of this parameter are hardware dependent. For the common 128x64 displays, values
     /// 1 and 2 result in different brightness levels, values above 2 behave the same was as 2.
-    /// See section 10.1.17 of the SSD1306 datasheet for more information.
+    /// See section 10.1.17 of the SH1106 datasheet for more information.
     ///
     /// `contrast` sets the value used in the `0x81 Set Contrast Control` command and must be
-    /// between 0 and 255. See section 10.1.7 of the SSD1306 datasheet for more information.
+    /// between 0 and 255. See section 10.1.7 of the SH1106 datasheet for more information.
     pub const fn custom(precharge: u8, contrast: u8) -> Self {
         debug_assert!(
             0 < precharge && precharge <= 15,

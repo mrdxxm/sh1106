@@ -1,16 +1,7 @@
-# SSD1306 driver
+# SH1106 driver
 
-[![Build Status](https://github.com/rust-embedded-community/ssd1306/actions/workflows/ci.yml/badge.svg)](https://github.com/rust-embedded-community/ssd1306/actions/workflows/ci.yml)
-[![Crates.io](https://img.shields.io/crates/v/ssd1306.svg)](https://crates.io/crates/ssd1306)
-[![Docs.rs](https://docs.rs/ssd1306/badge.svg)](https://docs.rs/ssd1306)
-
-[![CRIUS display showing the Rust logo](readme_banner.jpg?raw=true)](examples/image_i2c.rs)
-
-I2C and SPI (4 wire) driver for the SSD1306 OLED display.
-
-## [Documentation](https://docs.rs/ssd1306)
-
-## [Changelog](CHANGELOG.md)
+I2C and SPI (4 wire) driver for the SH1106 OLED display.
+Based on https://github.com/rust-embedded-community/ssd1306
 
 ## [Examples](examples)
 
@@ -30,7 +21,7 @@ use embedded_graphics::{
     prelude::*,
 };
 use panic_halt as _;
-use ssd1306::{prelude::*, I2CDisplayInterface, Ssd1306};
+use sh1106::{prelude::*, I2CDisplayInterface, Sh1106};
 use stm32f1xx_hal::{
     i2c::{BlockingI2c, DutyCycle, Mode},
     prelude::*,
@@ -70,7 +61,7 @@ fn main() -> ! {
     );
 
     let interface = I2CDisplayInterface::new(i2c);
-    let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
+    let mut display = Sh1106::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_buffered_graphics_mode();
     display.init().unwrap();
 

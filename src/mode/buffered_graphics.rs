@@ -4,10 +4,10 @@ use crate::{
     command::AddrMode,
     rotation::DisplayRotation,
     size::{DisplaySize, NewZeroed},
-    Ssd1306,
+    Sh1106,
 };
 #[cfg(feature = "async")]
-use crate::{size::DisplaySizeAsync, Ssd1306Async};
+use crate::{size::DisplaySizeAsync, Sh1106Async};
 #[cfg(feature = "async")]
 use display_interface::AsyncWriteOnlyDataCommand;
 use display_interface::{DisplayError, WriteOnlyDataCommand};
@@ -15,9 +15,9 @@ use display_interface::{DisplayError, WriteOnlyDataCommand};
 /// Buffered graphics mode.
 ///
 /// This mode keeps a pixel buffer in system memory, up to 1024 bytes for 128x64px displays. This
-/// buffer is drawn to by [`set_pixel`](Ssd1306::set_pixel) commands or
+/// buffer is drawn to by [`set_pixel`](Sh1106::set_pixel) commands or
 /// [`embedded-graphics`](https://docs.rs/embedded-graphics) commands. The display can then be
-/// updated using the [`flush`](Ssd1306::flush) method.
+/// updated using the [`flush`](Sh1106::flush) method.
 #[maybe_async_cfg::maybe(
     sync(keep_self),
     async(feature = "async", idents(DisplaySize(async = "DisplaySizeAsync")))
@@ -66,7 +66,7 @@ where
         )
     )
 )]
-impl<DI, SIZE> DisplayConfig for Ssd1306<DI, SIZE, BufferedGraphicsMode<SIZE>>
+impl<DI, SIZE> DisplayConfig for Sh1106<DI, SIZE, BufferedGraphicsMode<SIZE>>
 where
     DI: WriteOnlyDataCommand,
     SIZE: DisplaySize,
@@ -98,7 +98,7 @@ where
         )
     )
 )]
-impl<DI, SIZE> Ssd1306<DI, SIZE, BufferedGraphicsMode<SIZE>>
+impl<DI, SIZE> Sh1106<DI, SIZE, BufferedGraphicsMode<SIZE>>
 where
     DI: WriteOnlyDataCommand,
     SIZE: DisplaySize,
@@ -256,7 +256,7 @@ use super::DisplayConfigAsync;
         )
     )
 )]
-impl<DI, SIZE> DrawTarget for Ssd1306<DI, SIZE, BufferedGraphicsMode<SIZE>>
+impl<DI, SIZE> DrawTarget for Sh1106<DI, SIZE, BufferedGraphicsMode<SIZE>>
 where
     DI: WriteOnlyDataCommand,
     SIZE: DisplaySize,
@@ -298,7 +298,7 @@ where
         )
     )
 )]
-impl<DI, SIZE> OriginDimensions for Ssd1306<DI, SIZE, BufferedGraphicsMode<SIZE>>
+impl<DI, SIZE> OriginDimensions for Sh1106<DI, SIZE, BufferedGraphicsMode<SIZE>>
 where
     DI: WriteOnlyDataCommand,
     SIZE: DisplaySize,

@@ -21,7 +21,7 @@ use defmt_rtt as _;
 use embassy_executor::Spawner;
 use embassy_stm32::{bind_interrupts, i2c, peripherals, time::Hertz};
 use panic_probe as _;
-use ssd1306::{prelude::*, I2CDisplayInterface, Ssd1306Async};
+use sh1106::{prelude::*, I2CDisplayInterface, Sh1106Async};
 
 bind_interrupts!(struct Irqs {
     I2C1_EV => i2c::EventInterruptHandler<peripherals::I2C1>;
@@ -43,7 +43,7 @@ async fn main(_spawner: Spawner) {
     );
 
     let interface = I2CDisplayInterface::new(i2c);
-    let mut display = Ssd1306Async::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
+    let mut display = Sh1106Async::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_terminal_mode();
     display.init().await.unwrap();
     let _ = display.clear().await;

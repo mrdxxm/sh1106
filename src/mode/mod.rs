@@ -3,7 +3,7 @@
 mod buffered_graphics;
 mod terminal;
 
-use crate::{command::AddrMode, rotation::DisplayRotation, size::DisplaySize, Ssd1306};
+use crate::{command::AddrMode, rotation::DisplayRotation, size::DisplaySize, Sh1106};
 pub use buffered_graphics::*;
 use display_interface::{DisplayError, WriteOnlyDataCommand};
 pub use terminal::*;
@@ -21,11 +21,11 @@ pub trait DisplayConfig {
     async fn init(&mut self) -> Result<(), Self::Error>;
 }
 
-/// A mode with no additional functionality beyond that provided by the base [`Ssd1306`] struct.
+/// A mode with no additional functionality beyond that provided by the base [`Sh1106`] struct.
 #[derive(Debug, Copy, Clone)]
 pub struct BasicMode;
 
-impl<DI, SIZE> Ssd1306<DI, SIZE, BasicMode>
+impl<DI, SIZE> Sh1106<DI, SIZE, BasicMode>
 where
     DI: WriteOnlyDataCommand,
     SIZE: DisplaySize,
@@ -61,7 +61,7 @@ where
     }
 }
 
-impl<DI, SIZE> DisplayConfig for Ssd1306<DI, SIZE, BasicMode>
+impl<DI, SIZE> DisplayConfig for Sh1106<DI, SIZE, BasicMode>
 where
     DI: WriteOnlyDataCommand,
     SIZE: DisplaySize,

@@ -1,9 +1,9 @@
-//! SSD1306 OLED display driver.
+//! SH1106 OLED display driver.
 //!
-//! This crate provides a driver interface to the popular SSD1306 monochrome OLED display driver. It
+//! This crate provides a driver interface to the popular SH1106 monochrome OLED display driver. It
 //! supports I2C and SPI via the [`display_interface`](https://docs.rs/display_interface) crate.
 //!
-//! The main driver is created using [`Ssd1306::new`] which accepts an interface instance, display
+//! The main driver is created using [`Sh1106::new`] which accepts an interface instance, display
 //! size, rotation and mode. The following display modes are supported:
 //!
 //! - [`BasicMode`] - A simple mode with lower level methods available.
@@ -15,16 +15,16 @@
 //! # Examples
 //!
 //! Examples can be found in [the examples/
-//! folder](https://github.com/rust-embedded-community/ssd1306/blob/master/examples)
+//! folder](https://github.com/rust-embedded-community/sh1106/blob/master/examples)
 //!
 //! ## Draw some text to the display
 //!
 //! Uses [`BufferedGraphicsMode`] and [embedded_graphics](https://docs.rs/embedded-graphics). [See
 //! the complete example
-//! here](https://github.com/rust-embedded-community/ssd1306/blob/master/examples/text_i2c.rs).
+//! here](https://github.com/rust-embedded-community/sh1106/blob/master/examples/text_i2c.rs).
 //!
 //! ```rust
-//! # use ssd1306::test_helpers::I2cStub;
+//! # use sh1106::test_helpers::I2cStub;
 //! # let i2c = I2cStub;
 //! use embedded_graphics::{
 //!     mono_font::{ascii::FONT_6X10, MonoTextStyleBuilder},
@@ -32,10 +32,10 @@
 //!     prelude::*,
 //!     text::{Baseline, Text},
 //! };
-//! use ssd1306::{mode::BufferedGraphicsMode, prelude::*, I2CDisplayInterface, Ssd1306};
+//! use sh1106::{mode::BufferedGraphicsMode, prelude::*, I2CDisplayInterface, Sh1106};
 //!
 //! let interface = I2CDisplayInterface::new(i2c);
-//! let mut display = Ssd1306::new(
+//! let mut display = Sh1106::new(
 //!     interface,
 //!     DisplaySize128x64,
 //!     DisplayRotation::Rotate0,
@@ -61,17 +61,17 @@
 //! ## Write text to the display without a framebuffer
 //!
 //! Uses [`TerminalMode`]. [See the complete example
-//! here](https://github.com/rust-embedded-community/ssd1306/blob/master/examples/terminal_i2c.rs).
+//! here](https://github.com/rust-embedded-community/sh1106/blob/master/examples/terminal_i2c.rs).
 //!
 //! ```rust
-//! # use ssd1306::test_helpers::I2cStub;
+//! # use sh1106::test_helpers::I2cStub;
 //! # let i2c = I2cStub;
 //! use core::fmt::Write;
-//! use ssd1306::{mode::TerminalMode, prelude::*, I2CDisplayInterface, Ssd1306};
+//! use sh1106::{mode::TerminalMode, prelude::*, I2CDisplayInterface, Sh1106};
 //!
 //! let interface = I2CDisplayInterface::new(i2c);
 //!
-//! let mut display = Ssd1306::new(
+//! let mut display = Sh1106::new(
 //!     interface,
 //!     DisplaySize128x64,
 //!     DisplayRotation::Rotate0,
@@ -143,12 +143,12 @@ use size::DisplaySize;
 #[cfg(feature = "async")]
 use size::DisplaySizeAsync;
 
-/// SSD1306 driver.
+/// SH1106 driver.
 ///
 /// Note that some methods are only available when the display is configured in a certain [`mode`].
 #[maybe_async_cfg::maybe(sync(keep_self), async(feature = "async"))]
 #[derive(Copy, Clone, Debug)]
-pub struct Ssd1306<DI, SIZE, MODE> {
+pub struct Sh1106<DI, SIZE, MODE> {
     interface: DI,
     mode: MODE,
     size: SIZE,
@@ -160,11 +160,11 @@ pub struct Ssd1306<DI, SIZE, MODE> {
     sync(keep_self,),
     async(feature = "async", idents(DisplaySize(async = "DisplaySizeAsync")))
 )]
-impl<DI, SIZE> Ssd1306<DI, SIZE, BasicMode>
+impl<DI, SIZE> Sh1106<DI, SIZE, BasicMode>
 where
     SIZE: DisplaySize,
 {
-    /// Create a basic SSD1306 interface.
+    /// Create a basic SH1106 interface.
     ///
     /// Use the `into_*_mode` methods to enable more functionality.
     pub fn new(interface: DI, size: SIZE, rotation: DisplayRotation) -> Self {
@@ -189,13 +189,13 @@ where
         )
     )
 )]
-impl<DI, SIZE, MODE> Ssd1306<DI, SIZE, MODE>
+impl<DI, SIZE, MODE> Sh1106<DI, SIZE, MODE>
 where
     SIZE: DisplaySize,
 {
     /// Convert the display into another interface mode.
-    fn into_mode<MODE2>(self, mode: MODE2) -> Ssd1306<DI, SIZE, MODE2> {
-        Ssd1306 {
+    fn into_mode<MODE2>(self, mode: MODE2) -> Sh1106<DI, SIZE, MODE2> {
+        Sh1106 {
             mode,
             addr_mode: self.addr_mode,
             interface: self.interface,
@@ -208,14 +208,14 @@ where
     /// [embedded-graphics](https://crates.io/crates/embedded-graphics).
     ///
     /// See [`BufferedGraphicsMode`] for more information.
-    pub fn into_buffered_graphics_mode(self) -> Ssd1306<DI, SIZE, BufferedGraphicsMode<SIZE>> {
+    pub fn into_buffered_graphics_mode(self) -> Sh1106<DI, SIZE, BufferedGraphicsMode<SIZE>> {
         self.into_mode(BufferedGraphicsMode::new())
     }
 
     /// Convert the display into a text-only, terminal-like mode.
     ///
     /// See [`TerminalMode`] for more information.
-    pub fn into_terminal_mode(self) -> Ssd1306<DI, SIZE, TerminalMode> {
+    pub fn into_terminal_mode(self) -> Sh1106<DI, SIZE, TerminalMode> {
         self.into_mode(TerminalMode::new())
     }
 }
@@ -231,7 +231,7 @@ where
         )
     )
 )]
-impl<DI, SIZE, MODE> Ssd1306<DI, SIZE, MODE>
+impl<DI, SIZE, MODE> Sh1106<DI, SIZE, MODE>
 where
     DI: WriteOnlyDataCommand,
     SIZE: DisplaySize,
@@ -309,11 +309,11 @@ where
     /// Get display dimensions, taking into account the current rotation of the display
     ///
     /// ```rust
-    /// # use ssd1306::test_helpers::StubInterface;
+    /// # use sh1106::test_helpers::StubInterface;
     /// # let interface = StubInterface;
-    /// use ssd1306::{mode::TerminalMode, prelude::*, Ssd1306};
+    /// use sh1106::{mode::TerminalMode, prelude::*, Sh1106};
     ///
-    /// let mut display = Ssd1306::new(
+    /// let mut display = Sh1106::new(
     ///     interface,
     ///     DisplaySize128x64,
     ///     DisplayRotation::Rotate0,
@@ -321,7 +321,7 @@ where
     /// assert_eq!(display.dimensions(), (128, 64));
     ///
     /// # let interface = StubInterface;
-    /// let mut rotated_display = Ssd1306::new(
+    /// let mut rotated_display = Sh1106::new(
     ///     interface,
     ///     DisplaySize128x64,
     ///     DisplayRotation::Rotate90,
@@ -532,7 +532,7 @@ where
         )
     )
 )]
-impl<DI, SIZE, MODE> Ssd1306<DI, SIZE, MODE> {
+impl<DI, SIZE, MODE> Sh1106<DI, SIZE, MODE> {
     /// Reset the display.
     pub async fn reset<RST, DELAY>(
         &mut self,

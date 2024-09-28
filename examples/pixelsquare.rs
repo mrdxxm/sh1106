@@ -31,7 +31,7 @@ use embassy_stm32::{
     time::Hertz,
 };
 use panic_probe as _;
-use ssd1306::{prelude::*, Ssd1306};
+use sh1106::{prelude::*, Sh1106};
 
 #[entry]
 fn main() -> ! {
@@ -46,7 +46,7 @@ fn main() -> ! {
     let spi = embedded_hal_bus::spi::ExclusiveDevice::new_no_delay(spi, cs).unwrap();
 
     let interface = display_interface_spi::SPIInterface::new(spi, dc);
-    let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
+    let mut display = Sh1106::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_buffered_graphics_mode();
 
     display
