@@ -10,84 +10,71 @@ use display_interface::{DataFormat::U8, DisplayError, WriteOnlyDataCommand};
 #[maybe_async_cfg::maybe(sync(keep_self), async(feature = "async"))]
 #[derive(Debug, Copy, Clone)]
 pub enum Command {
-    /// Set contrast. Higher number is higher contrast. Default = 0x7F
+    /// 81h Set contrast. Higher number is higher contrast. Default = 0x80
     Contrast(u8),
-    /// Turn entire display on. If set, all pixels will
+    /// A4h/A5h Turn entire display on. If set, all pixels will
     /// be set to on, if not, the value in memory will be used.
     AllOn(bool),
-    /// Invert display.
+    /// A6h/A7h Invert display.
     Invert(bool),
-    /// Turn display on or off.
+    /// AEh/AFh Turn display on or off.
     DisplayOn(bool),
-    /// Set up horizontal scrolling.
-    /// Values are scroll direction, start page, end page,
-    /// and number of frames per step.
-    HScrollSetup(HScrollDir, Page, Page, NFrames),
-    /// Set up horizontal + vertical scrolling.
-    /// Values are scroll direction, start page, end page,
-    /// number of frames per step, and vertical scrolling offset.
-    /// Scrolling offset may be from 0-63
-    VHScrollSetup(VHScrollDir, Page, Page, NFrames, u8),
-    /// Enable scrolling
-    EnableScroll(bool),
-    /// Setup vertical scroll area.
-    /// Values are number of rows above scroll area (0-63)
-    /// and number of rows of scrolling. (0-64)
-    VScrollArea(u8, u8),
-    /// Set the lower nibble of the column start address
+    /// 00h-0Fh Set the lower nibble of the column start address
     /// register for Page addressing mode, using the lower
     /// 4 bits given.
     /// This is only for page addressing mode
     LowerColStart(u8),
-    /// Set the upper nibble of the column start address
+    /// 10h-1Fh Set the upper nibble of the column start address
     /// register for Page addressing mode, using the lower
     /// 4 bits given.
     /// This is only for page addressing mode
     UpperColStart(u8),
-    /// Set the column start address register for Page addressing mode.
+    /// Set the column start address register
     /// Combines LowerColStart and UpperColStart
-    /// This is only for page addressing mode
     ColStart(u8),
-    /// Set addressing mode
-    AddressMode(AddrMode),
-    /// Setup column start and end address
-    /// values range from 0-127
-    /// This is only for horizontal or vertical addressing mode
-    ColumnAddress(u8, u8),
-    /// Setup page start and end address
-    /// This is only for horizontal or vertical addressing mode
-    PageAddress(Page, Page),
-    /// Set GDDRAM page start address for Page addressing mode
+    ///  B0h-B7h Set Page Address
+    ///
     PageStart(Page),
-    /// Set display start line from 0-63
+    /// 40h-7Fh Set display start line from 0-63
     StartLine(u8),
-    /// Reverse columns from 127-0
+    /// A0h/A1h Reverse columns from 127-0
     SegmentRemap(bool),
-    /// Set multiplex ratio from 15-63 (MUX-1)
+    /// A8h Set multiplex ratio from 1-64. Default is 64
     Multiplex(u8),
-    /// Scan from COM[n-1] to COM0 (where N is mux ratio)
+    /// C0h/C8h If true, scan from COM[n-1] to COM0 (where N is mux ratio)
+    /// Default is false
     ReverseComDir(bool),
-    /// Set vertical shift
+    /// D3h Set vertical shift from 0-63
     DisplayOffset(u8),
-    /// Setup com hardware configuration
-    /// First value indicates sequential (false) or alternative (true)
-    /// pin configuration. Second value disables (false) or enables (true)
-    /// left/right remap.
-    ComPinConfig(bool, bool),
-    /// Set up display clock.
-    /// First value is oscillator frequency, increasing with higher value
+    /// Dah Setup COM hardware configuration
+    /// Indicates sequential (false) or alternative (true)
+    /// pin configuration.
+    ComPinConfig(bool),
+    /// D5h Set up display clock.
+    /// First value is oscillator frequency, increasing with higher value. POR value is 5
     /// Second value is divide ratio - 1
     DisplayClockDiv(u8, u8),
-    /// Set up phase 1 and 2 of precharge period. Each value must be in the range 1 - 15.
+    /// D9h Set up phase 1 and 2 of precharge period. Each value must be in the range 1 - 15.
+    /// Default is 2
     PreChargePeriod(u8, u8),
     /// Set Vcomh Deselect level
     VcomhDeselect(VcomhLevel),
     /// NOOP
     Noop,
-    /// Enable charge pump
+    /// 8Ah/8Bh Enable charge pump
     ChargePump(bool),
-    /// Select external or internal I REF. Only for 72 x 40 display with SH1106B driver
-    InternalIref(bool, bool),
+    /// 30h - 33h Set Pump voltage value
+    SetPumpVoltage(PumpVoltage),
+    /// E0h Start Read-Modify-Write
+    /// A pair of Read-Modify-Write and End commands must always be used. Once read-modify-write is issued,
+    /// column address is not incremental by read display data command but incremental by write display data command only.
+    /// It continues until End command is issued. When the End is issued, column address returns to the address
+    /// when read-modify-write is issued. This can reduce the microprocessor load when data of a specific display area
+    /// is repeatedly changed during cursor blinking or others.
+    ReadModifyWriteStart,
+    /// EEh End Read-Modify-Write
+    /// Cancels Read-Modify-Write mode and returns column address to the original address (when Read-Modify-Write is issued.)
+    ReadModifyWriteEnd,
 }
 
 #[maybe_async_cfg::maybe(
@@ -108,52 +95,12 @@ impl Command {
             Command::AllOn(on) => Self::send_commands(iface, &[0xA4 | (on as u8)]).await,
             Command::Invert(inv) => Self::send_commands(iface, &[0xA6 | (inv as u8)]).await,
             Command::DisplayOn(on) => Self::send_commands(iface, &[0xAE | (on as u8)]).await,
-            Command::HScrollSetup(dir, start, end, rate) => {
-                Self::send_commands(
-                    iface,
-                    &[
-                        0x26 | (dir as u8),
-                        0,
-                        start as u8,
-                        rate as u8,
-                        end as u8,
-                        0,
-                        0xFF,
-                    ],
-                )
-                .await
-            }
-            Command::VHScrollSetup(dir, start, end, rate, offset) => {
-                Self::send_commands(
-                    iface,
-                    &[
-                        0x28 | (dir as u8),
-                        0,
-                        start as u8,
-                        rate as u8,
-                        end as u8,
-                        offset,
-                    ],
-                )
-                .await
-            }
-            Command::EnableScroll(en) => Self::send_commands(iface, &[0x2E | (en as u8)]).await,
-            Command::VScrollArea(above, lines) => {
-                Self::send_commands(iface, &[0xA3, above, lines]).await
-            }
             Command::LowerColStart(addr) => Self::send_commands(iface, &[0xF & addr]).await,
             Command::UpperColStart(addr) => {
                 Self::send_commands(iface, &[0x10 | (0xF & addr)]).await
             }
             Command::ColStart(addr) => {
                 Self::send_commands(iface, &[0xF & addr, 0x10 | (0xF & (addr >> 4))]).await
-            }
-            Command::AddressMode(mode) => Self::send_commands(iface, &[0x20, mode as u8]).await,
-            Command::ColumnAddress(start, end) => {
-                Self::send_commands(iface, &[0x21, start, end]).await
-            }
-            Command::PageAddress(start, end) => {
-                Self::send_commands(iface, &[0x22, start as u8, end as u8]).await
             }
             Command::PageStart(page) => Self::send_commands(iface, &[0xB0 | (page as u8)]).await,
             Command::StartLine(line) => Self::send_commands(iface, &[0x40 | (0x3F & line)]).await,
@@ -165,9 +112,8 @@ impl Command {
                 Self::send_commands(iface, &[0xC0 | ((rev as u8) << 3)]).await
             }
             Command::DisplayOffset(offset) => Self::send_commands(iface, &[0xD3, offset]).await,
-            Command::ComPinConfig(alt, lr) => {
-                Self::send_commands(iface, &[0xDA, 0x2 | ((alt as u8) << 4) | ((lr as u8) << 5)])
-                    .await
+            Command::ComPinConfig(alt) => {
+                Self::send_commands(iface, &[0xDA, 0x2 | ((alt as u8) << 4)]).await
             }
             Command::DisplayClockDiv(fosc, div) => {
                 Self::send_commands(iface, &[0xD5, ((0xF & fosc) << 4) | (0xF & div)]).await
@@ -179,13 +125,12 @@ impl Command {
                 Self::send_commands(iface, &[0xDB, (level as u8) << 4]).await
             }
             Command::Noop => Self::send_commands(iface, &[0xE3]).await,
-            Command::ChargePump(en) => {
-                Self::send_commands(iface, &[0x8D, 0x10 | ((en as u8) << 2)]).await
+            Command::ChargePump(en) => Self::send_commands(iface, &[0xAD, 0x8A | (en as u8)]).await,
+            Command::SetPumpVoltage(voltage) => {
+                Self::send_commands(iface, &[0x30 | (voltage as u8)])
             }
-            Command::InternalIref(en, current) => {
-                Self::send_commands(iface, &[0xAD, ((current as u8) << 5) | ((en as u8) << 4)])
-                    .await
-            }
+            Command::ReadModifyWriteStart => Self::send_commands(iface, &[0xE0]),
+            Command::ReadModifyWriteEnd => Self::send_commands(iface, &[0xEE]),
         }
     }
 
@@ -195,26 +140,6 @@ impl Command {
     {
         iface.send_commands(U8(data)).await
     }
-}
-
-/// Horizontal Scroll Direction
-#[derive(Debug, Clone, Copy)]
-#[allow(dead_code)]
-pub enum HScrollDir {
-    /// Left to right
-    LeftToRight = 0,
-    /// Right to left
-    RightToLeft = 1,
-}
-
-/// Vertical and horizontal scroll dir
-#[derive(Debug, Clone, Copy)]
-#[allow(dead_code)]
-pub enum VHScrollDir {
-    /// Vertical and right horizontal
-    VerticalRight = 0b01,
-    /// Vertical and left horizontal
-    VerticalLeft = 0b10,
 }
 
 /// Display page
@@ -236,22 +161,6 @@ pub enum Page {
     Page6 = 0b0110,
     /// Page 7
     Page7 = 0b0111,
-    /// Page 8
-    Page8 = 0b1000,
-    /// Page 9
-    Page9 = 0b1001,
-    /// Page 10
-    Page10 = 0b1010,
-    /// Page 11
-    Page11 = 0b1011,
-    /// Page 12
-    Page12 = 0b1100,
-    /// Page 13
-    Page13 = 0b1101,
-    /// Page 14
-    Page14 = 0b1110,
-    /// Page 15
-    Page15 = 0b1111,
 }
 
 impl From<u8> for Page {
@@ -265,63 +174,160 @@ impl From<u8> for Page {
             5 => Page::Page5,
             6 => Page::Page6,
             7 => Page::Page7,
-            8 => Page::Page8,
-            9 => Page::Page9,
-            10 => Page::Page10,
-            11 => Page::Page11,
-            12 => Page::Page12,
-            13 => Page::Page13,
-            14 => Page::Page14,
-            15 => Page::Page15,
-            _ => panic!("Page too high"),
+            _ => unreachable!(),
         }
     }
 }
 
-/// Frame interval
-#[derive(Debug, Clone, Copy)]
-#[allow(dead_code)]
-pub enum NFrames {
-    /// 2 Frames
-    F2 = 0b111,
-    /// 3 Frames
-    F3 = 0b100,
-    /// 4 Frames
-    F4 = 0b101,
-    /// 5 Frames
-    F5 = 0b000,
-    /// 25 Frames
-    F25 = 0b110,
-    /// 64 Frames
-    F64 = 0b001,
-    /// 128 Frames
-    F128 = 0b010,
-    /// 256 Frames
-    F256 = 0b011,
-}
-
-/// Address mode
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[allow(dead_code)]
-pub enum AddrMode {
-    /// Horizontal mode
-    Horizontal = 0b00,
-    /// Vertical mode
-    Vertical = 0b01,
-    /// Page mode (default)
-    Page = 0b10,
-}
-
-/// Vcomh Deselect level
-#[derive(Debug, Clone, Copy)]
+/// VCOM voltage levels based on the formula:
+/// VCOM = (0.430 + A[7:0] * 0.006415) * VREF
+#[derive(Debug, Clone, Copy, Default)]
 #[allow(dead_code)]
 pub enum VcomhLevel {
-    /// 0.65 * Vcc
-    V065 = 0b001,
-    /// 0.77 * Vcc
-    V077 = 0b010,
-    /// 0.83 * Vcc
-    V083 = 0b011,
-    /// Auto
-    Auto = 0b100,
+    /// 0.430 * VREF
+    V0430 = 0x00,
+    /// 0.436415 * VREF
+    V0436 = 0x01,
+    /// 0.44283 * VREF
+    V0442 = 0x02,
+    /// 0.449245 * VREF
+    V0449 = 0x03,
+    /// 0.45566 * VREF
+    V0455 = 0x04,
+    /// 0.462075 * VREF
+    V0462 = 0x05,
+    /// 0.46849 * VREF
+    V0468 = 0x06,
+    /// 0.474905 * VREF
+    V0474 = 0x07,
+    /// 0.48132 * VREF
+    V0481 = 0x08,
+    /// 0.487735 * VREF
+    V0487 = 0x09,
+    /// 0.49415 * VREF
+    V0494 = 0x0A,
+    /// 0.500565 * VREF
+    V0500 = 0x0B,
+    /// 0.50698 * VREF
+    V0506 = 0x0C,
+    /// 0.513395 * VREF
+    V0513 = 0x0D,
+    /// 0.51981 * VREF
+    V0519 = 0x0E,
+    /// 0.526225 * VREF
+    V0526 = 0x0F,
+    /// 0.53264 * VREF
+    V0532 = 0x10,
+    /// 0.539055 * VREF
+    V0539 = 0x11,
+    /// 0.54547 * VREF
+    V0545 = 0x12,
+    /// 0.551885 * VREF
+    V0551 = 0x13,
+    /// 0.5583 * VREF
+    V0558 = 0x14,
+    /// 0.564715 * VREF
+    V0564 = 0x15,
+    /// 0.57113 * VREF
+    V0571 = 0x16,
+    /// 0.577545 * VREF
+    V0577 = 0x17,
+    /// 0.58396 * VREF
+    V0583 = 0x18,
+    /// 0.590375 * VREF
+    V0590 = 0x19,
+    /// 0.59679 * VREF
+    V0596 = 0x1A,
+    /// 0.603205 * VREF
+    V0603 = 0x1B,
+    /// 0.60962 * VREF
+    V0609 = 0x1C,
+    /// 0.616035 * VREF
+    V0616 = 0x1D,
+    /// 0.62245 * VREF
+    V0622 = 0x1E,
+    /// 0.628865 * VREF
+    V0628 = 0x1F,
+    /// 0.63528 * VREF
+    V0635 = 0x20,
+    /// 0.641695 * VREF
+    V0641 = 0x21,
+    /// 0.64811 * VREF
+    V0648 = 0x22,
+    /// 0.654525 * VREF
+    V0654 = 0x23,
+    /// 0.66094 * VREF
+    V0660 = 0x24,
+    /// 0.667355 * VREF
+    V0667 = 0x25,
+    /// 0.67377 * VREF
+    V0673 = 0x26,
+    /// 0.680185 * VREF
+    V0680 = 0x27,
+    /// 0.6866 * VREF
+    V0686 = 0x28,
+    /// 0.693015 * VREF
+    V0693 = 0x29,
+    /// 0.69943 * VREF
+    V0699 = 0x2A,
+    /// 0.705845 * VREF
+    V0705 = 0x2B,
+    /// 0.71226 * VREF
+    V0712 = 0x2C,
+    /// 0.718675 * VREF
+    V0718 = 0x2D,
+    /// 0.72509 * VREF
+    V0725 = 0x2E,
+    /// 0.731505 * VREF
+    V0731 = 0x2F,
+    /// 0.73792 * VREF
+    V0737 = 0x30,
+    /// 0.744335 * VREF
+    V0744 = 0x31,
+    /// 0.75075 * VREF
+    V0750 = 0x32,
+    /// 0.757165 * VREF
+    V0757 = 0x33,
+    /// 0.76358 * VREF
+    V0763 = 0x34,
+    /// 0.769995 * VREF
+    #[default]
+    V0769 = 0x35,
+    /// 0.77641 * VREF
+    V0776 = 0x36,
+    /// 0.782825 * VREF
+    V0782 = 0x37,
+    /// 0.78924 * VREF
+    V0789 = 0x38,
+    /// 0.795655 * VREF
+    V0795 = 0x39,
+    /// 0.80207 * VREF
+    V0802 = 0x3A,
+    /// 0.808485 * VREF
+    V0808 = 0x3B,
+    /// 0.8149 * VREF
+    V0814 = 0x3C,
+    /// 0.821315 * VREF
+    V0821 = 0x3D,
+    /// 0.82773 * VREF
+    V0827 = 0x3E,
+    /// 0.834145 * VREF
+    V0834 = 0x3F,
+    /// 1 * VREF
+    V1000 = 0x40,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+#[allow(dead_code)]
+/// Pump output voltage (VPP)
+pub enum PumpVoltage {
+    /// 6.4V
+    V64 = 0,
+    /// 7.4V
+    V74 = 1,
+    /// 8V
+    #[default]
+    V80 = 2,
+    /// 9V
+    V90 = 3,
 }

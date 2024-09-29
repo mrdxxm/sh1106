@@ -84,7 +84,7 @@ impl DisplaySize for DisplaySize128x64 {
         &self,
         iface: &mut impl WriteOnlyDataCommand,
     ) -> Result<(), DisplayError> {
-        Command::ComPinConfig(true, false).send(iface).await
+        Command::ComPinConfig(true).send(iface).await
     }
 }
 
@@ -102,7 +102,7 @@ impl DisplaySize for DisplaySize128x32 {
         &self,
         iface: &mut impl WriteOnlyDataCommand,
     ) -> Result<(), DisplayError> {
-        Command::ComPinConfig(false, false).send(iface).await
+        Command::ComPinConfig(false).send(iface).await
     }
 }
 
@@ -120,7 +120,7 @@ impl DisplaySize for DisplaySize96x16 {
         &self,
         iface: &mut impl WriteOnlyDataCommand,
     ) -> Result<(), DisplayError> {
-        Command::ComPinConfig(false, false).send(iface).await
+        Command::ComPinConfig(false).send(iface).await
     }
 }
 
@@ -140,8 +140,7 @@ impl DisplaySize for DisplaySize72x40 {
         &self,
         iface: &mut impl WriteOnlyDataCommand,
     ) -> Result<(), DisplayError> {
-        Command::ComPinConfig(true, false).send(iface).await?;
-        Command::InternalIref(true, true).send(iface).await
+        Command::ComPinConfig(true).send(iface).await
     }
 }
 
@@ -161,7 +160,7 @@ impl DisplaySize for DisplaySize64x48 {
         &self,
         iface: &mut impl WriteOnlyDataCommand,
     ) -> Result<(), DisplayError> {
-        Command::ComPinConfig(true, false).send(iface).await
+        Command::ComPinConfig(true).send(iface).await
     }
 }
 
@@ -181,7 +180,7 @@ impl DisplaySize for DisplaySize64x32 {
         &self,
         iface: &mut impl WriteOnlyDataCommand,
     ) -> Result<(), DisplayError> {
-        Command::ComPinConfig(true, false).send(iface).await
+        Command::ComPinConfig(true).send(iface).await
     }
 }
 

@@ -127,7 +127,7 @@ use crate::mode::BasicMode;
 use brightness::Brightness;
 #[cfg(feature = "async")]
 use command::CommandAsync;
-use command::{AddrMode, Command, VcomhLevel};
+use command::{Command, VcomhLevel};
 #[cfg(feature = "async")]
 use display_interface::AsyncWriteOnlyDataCommand;
 use display_interface::{DataFormat::U8, DisplayError, WriteOnlyDataCommand};
@@ -152,7 +152,6 @@ pub struct Sh1106<DI, SIZE, MODE> {
     interface: DI,
     mode: MODE,
     size: SIZE,
-    addr_mode: AddrMode,
     rotation: DisplayRotation,
 }
 
@@ -171,7 +170,6 @@ where
         Self {
             interface,
             size,
-            addr_mode: AddrMode::Page,
             mode: BasicMode,
             rotation,
         }
@@ -197,7 +195,6 @@ where
     fn into_mode<MODE2>(self, mode: MODE2) -> Sh1106<DI, SIZE, MODE2> {
         Sh1106 {
             mode,
-            addr_mode: self.addr_mode,
             interface: self.interface,
             size: self.size,
             rotation: self.rotation,
@@ -236,46 +233,33 @@ where
     DI: WriteOnlyDataCommand,
     SIZE: DisplaySize,
 {
-    /// Initialise the display in one of the available addressing modes.
-    pub async fn init_with_addr_mode(&mut self, mode: AddrMode) -> Result<(), DisplayError> {
+    /// Initialise the display
+    pub async fn init_default(&mut self) -> Result<(), DisplayError> {
         let rotation = self.rotation;
 
         Command::DisplayOn(false).send(&mut self.interface).await?;
-        Command::DisplayClockDiv(0x8, 0x0)
+        Command::DisplayClockDiv(0x5, 0x0) //0x5 is default for SH1106
             .send(&mut self.interface)
             .await?;
-        Command::Multiplex(SIZE::HEIGHT - 1)
+        Command::Multiplex(SIZE::HEIGHT - 1) //TODO SSD1306 legacy SH1106 behaviour is different
             .send(&mut self.interface)
             .await?;
         Command::DisplayOffset(0).send(&mut self.interface).await?;
         Command::StartLine(0).send(&mut self.interface).await?;
         // TODO: Ability to turn charge pump on/off
         Command::ChargePump(true).send(&mut self.interface).await?;
-        Command::AddressMode(mode).send(&mut self.interface).await?;
 
         self.size.configure(&mut self.interface).await?;
         self.set_rotation(rotation).await?;
 
         self.set_brightness(Brightness::default()).await?;
-        Command::VcomhDeselect(VcomhLevel::Auto)
+        Command::VcomhDeselect(VcomhLevel::default())
             .send(&mut self.interface)
             .await?;
         Command::AllOn(false).send(&mut self.interface).await?;
         Command::Invert(false).send(&mut self.interface).await?;
-        Command::EnableScroll(false)
-            .send(&mut self.interface)
-            .await?;
         Command::DisplayOn(true).send(&mut self.interface).await?;
 
-        self.addr_mode = mode;
-
-        Ok(())
-    }
-
-    /// Change the addressing mode
-    pub async fn set_addr_mode(&mut self, mode: AddrMode) -> Result<(), DisplayError> {
-        Command::AddressMode(mode).send(&mut self.interface).await?;
-        self.addr_mode = mode;
         Ok(())
     }
 
@@ -441,26 +425,26 @@ where
         Command::DisplayOn(on).send(&mut self.interface).await
     }
 
-    /// Set the position in the framebuffer of the display limiting where any sent data should be
-    /// drawn. This method can be used for changing the affected area on the screen as well
-    /// as (re-)setting the start point of the next `draw` call.
-    pub async fn set_draw_area(
-        &mut self,
-        start: (u8, u8),
-        end: (u8, u8),
-    ) -> Result<(), DisplayError> {
-        Command::ColumnAddress(start.0, end.0.saturating_sub(1))
-            .send(&mut self.interface)
-            .await?;
-
-        if self.addr_mode != AddrMode::Page {
-            Command::PageAddress(start.1.into(), (end.1.saturating_sub(1)).into())
-                .send(&mut self.interface)
-                .await?;
-        }
-
-        Ok(())
-    }
+    // /// Set the position in the framebuffer of the display limiting where any sent data should be
+    // /// drawn. This method can be used for changing the affected area on the screen as well
+    // /// as (re-)setting the start point of the next `draw` call.
+    // pub async fn set_draw_area(
+    //     &mut self,
+    //     start: (u8, u8),
+    //     end: (u8, u8),
+    // ) -> Result<(), DisplayError> {
+    //     Command::ColumnAddress(start.0, end.0.saturating_sub(1))
+    //         .send(&mut self.interface)
+    //         .await?;
+    //
+    //     if self.addr_mode != AddrMode::Page {
+    //         Command::PageAddress(start.1.into(), (end.1.saturating_sub(1)).into())
+    //             .send(&mut self.interface)
+    //             .await?;
+    //     }
+    //
+    //     Ok(())
+    // }
 
     /// Set the column address in the framebuffer of the display where any sent data should be
     /// drawn.

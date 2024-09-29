@@ -1,7 +1,6 @@
 //! Buffered graphics mode.
 
 use crate::{
-    command::AddrMode,
     rotation::DisplayRotation,
     size::{DisplaySize, NewZeroed},
     Sh1106,
@@ -83,7 +82,7 @@ where
     /// Initialise and clear the display in graphics mode.
     async fn init(&mut self) -> Result<(), DisplayError> {
         self.clear_impl(false);
-        self.init_with_addr_mode(AddrMode::Horizontal).await
+        self.init_default().await
     }
 }
 
@@ -149,23 +148,23 @@ where
         self.mode.min_y = 255;
         self.mode.max_y = 0;
 
-        // Tell the display to update only the part that has changed
-        let offset_x = match self.rotation {
-            DisplayRotation::Rotate0 | DisplayRotation::Rotate270 => SIZE::OFFSETX,
-            DisplayRotation::Rotate180 | DisplayRotation::Rotate90 => {
-                // If segment remapping is flipped, we need to calculate
-                // the offset from the other edge of the display.
-                SIZE::DRIVER_COLS - SIZE::WIDTH - SIZE::OFFSETX
-            }
-        };
+        // // Tell the display to update only the part that has changed
+        // let offset_x = match self.rotation {
+        //     DisplayRotation::Rotate0 | DisplayRotation::Rotate270 => SIZE::OFFSETX,
+        //     DisplayRotation::Rotate180 | DisplayRotation::Rotate90 => {
+        //         // If segment remapping is flipped, we need to calculate
+        //         // the offset from the other edge of the display.
+        //         SIZE::DRIVER_COLS - SIZE::WIDTH - SIZE::OFFSETX
+        //     }
+        // };
 
         match self.rotation {
             DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => {
-                self.set_draw_area(
-                    (disp_min_x + offset_x, disp_min_y + SIZE::OFFSETY),
-                    (disp_max_x + offset_x, disp_max_y + SIZE::OFFSETY),
-                )
-                .await?;
+                // self.set_draw_area(
+                //     (disp_min_x + offset_x, disp_min_y + SIZE::OFFSETY),
+                //     (disp_max_x + offset_x, disp_max_y + SIZE::OFFSETY),
+                // )
+                // .await?;
 
                 Self::flush_buffer_chunks(
                     &mut self.interface,
@@ -177,11 +176,11 @@ where
                 .await
             }
             DisplayRotation::Rotate90 | DisplayRotation::Rotate270 => {
-                self.set_draw_area(
-                    (disp_min_y + offset_x, disp_min_x + SIZE::OFFSETY),
-                    (disp_max_y + offset_x, disp_max_x + SIZE::OFFSETY),
-                )
-                .await?;
+                // self.set_draw_area(
+                //     (disp_min_y + offset_x, disp_min_x + SIZE::OFFSETY),
+                //     (disp_max_y + offset_x, disp_max_x + SIZE::OFFSETY),
+                // )
+                // .await?;
 
                 Self::flush_buffer_chunks(
                     &mut self.interface,

@@ -3,7 +3,7 @@
 mod buffered_graphics;
 mod terminal;
 
-use crate::{command::AddrMode, rotation::DisplayRotation, size::DisplaySize, Sh1106};
+use crate::{rotation::DisplayRotation, size::DisplaySize, Sh1106};
 pub use buffered_graphics::*;
 use display_interface::{DisplayError, WriteOnlyDataCommand};
 pub use terminal::*;
@@ -32,13 +32,8 @@ where
 {
     /// Clear the display.
     pub fn clear(&mut self) -> Result<(), DisplayError> {
-        let old_addr_mode = self.addr_mode;
-        if old_addr_mode != AddrMode::Horizontal {
-            self.set_addr_mode(AddrMode::Horizontal)?;
-        }
-
         let dim = self.dimensions();
-        self.set_draw_area((0, 0), dim)?;
+        //self.set_draw_area((0, 0), dim)?;
 
         let num_pixels = dim.0 as u16 * dim.1 as u16;
 
@@ -51,10 +46,6 @@ where
 
         for _ in 0..num_batches {
             self.draw(&[0; BYTES_PER_BATCH as usize])?;
-        }
-
-        if old_addr_mode != AddrMode::Horizontal {
-            self.set_addr_mode(old_addr_mode)?;
         }
 
         Ok(())
@@ -75,6 +66,6 @@ where
 
     /// Initialise in horizontal addressing mode.
     fn init(&mut self) -> Result<(), DisplayError> {
-        self.init_with_addr_mode(AddrMode::Horizontal)
+        self.init_default()
     }
 }
