@@ -180,7 +180,7 @@ impl From<u8> for Page {
 }
 
 /// VCOM voltage levels based on the formula:
-/// VCOM = (0.430 + A[7:0] * 0.006415) * VREF
+/// VCOM = (0.430 + A\[7:0\] * 0.006415) * VREF
 #[derive(Debug, Clone, Copy, Default)]
 #[allow(dead_code)]
 pub enum VcomhLevel {
