@@ -127,10 +127,10 @@ impl Command {
             Command::Noop => Self::send_commands(iface, &[0xE3]).await,
             Command::ChargePump(en) => Self::send_commands(iface, &[0xAD, 0x8A | (en as u8)]).await,
             Command::SetPumpVoltage(voltage) => {
-                Self::send_commands(iface, &[0x30 | (voltage as u8)])
+                Self::send_commands(iface, &[0x30 | (voltage as u8)]).await
             }
-            Command::ReadModifyWriteStart => Self::send_commands(iface, &[0xE0]),
-            Command::ReadModifyWriteEnd => Self::send_commands(iface, &[0xEE]),
+            Command::ReadModifyWriteStart => Self::send_commands(iface, &[0xE0]).await,
+            Command::ReadModifyWriteEnd => Self::send_commands(iface, &[0xEE]).await,
         }
     }
 
